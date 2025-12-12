@@ -1,37 +1,42 @@
 name: Terraform CI/CD Pipeline to deploy on AWS
-run-name: ${{github.actor}} has triggered the Pipeline
+run-name: ${{ github.actor }} has triggered the Pipeline
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  AWS_DEFAULT_REGION: us-east-1
 
 jobs:
   build-infra:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
-      
+        with:
+          terraform_version: 1.6.0
+
       - name: Terraform Init
-        id: init
         run: terraform init
 
       - name: Terraform Validate
-        id: validate
         run: terraform validate
 
       - name: Terraform Plan
-        id: plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        id: apply
-        run: terraform apply --auto-approve
+        if: github.event_name != 'workflow_dispatch'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: github.event_name == 'workflow_dispatch'
+        run: terraform destroy -auto-approve
