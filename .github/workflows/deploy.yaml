@@ -1,5 +1,5 @@
 name: Terraform CI/CD Pipeline to deploy on AWS
-run-name: ${{ github.actor }} has triggered the Pipeline
+run-name: ${{ github.actor }} has triggered the Pipeline!
 
 on:
   push:
